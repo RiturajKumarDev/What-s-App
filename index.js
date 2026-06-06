@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require("cors");
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
+const { execSync } = require('child_process');
 
 const app = express();
 const PORT = 3000;
@@ -13,6 +14,46 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 let isClientReady = false;
+
+// Find Chrome executable path
+function findChrome() {
+    const paths = [
+        '/usr/bin/google-chrome-stable',
+        '/usr/bin/google-chrome',
+        '/usr/bin/chromium-browser',
+        '/usr/bin/chromium',
+        process.env.PUPPETEER_EXECUTABLE_PATH
+    ].filter(Boolean);
+    
+    for (const path of paths) {
+        try {
+            execSync(`test -f ${path}`, { stdio: 'ignore' });
+            console.log(`Found Chrome at: ${path}`);
+            return path;
+        } catch (e) {
+            // Path doesn't exist
+        }
+    }
+    
+    // Try to find Chrome using which command
+    try {
+        const whichPath = execSync('which google-chrome-stable || which google-chrome || which chromium', { encoding: 'utf8' }).trim();
+        if (whichPath) {
+            console.log(`Found Chrome via which: ${whichPath}`);
+            return whichPath;
+        }
+    } catch (e) {}
+    
+    console.error('Chrome not found!');
+    return null;
+}
+
+const chromePath = findChrome();
+
+if (!chromePath) {
+    console.error('FATAL: Chrome browser not found. Install Chrome first.');
+    process.exit(1);
+}
 
 const client = new Client({
     authStrategy: new LocalAuth({
