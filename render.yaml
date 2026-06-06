@@ -1,11 +1,14 @@
 services:
   - type: web
-    name: your-whatsapp-bot
-    runtime: node
-    buildCommand: | 
-      apt-get update && apt-get install -y wget gnupg
-      wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
-      echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
-      apt-get update && apt-get install -y google-chrome-stable
-      npm install
-    startCommand: node index.js
+    name: whatsapp-bot
+    runtime: image
+    repo: https://github.com/RiturajKumarDev/What-s-App
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: true
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: /usr/bin/google-chrome-stable
+      - key: PORT
+        value: 3000
