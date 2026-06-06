@@ -19,7 +19,6 @@ const client = new Client({
     authStrategy: new LocalAuth({
         clientId: 'main-session'
     }),
-    qrMaxRetries: 10, 
     puppeteer: {
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
         headless: true,
