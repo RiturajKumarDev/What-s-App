@@ -7,10 +7,22 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build output
 dist
 dist-ssr
+
+# Local env
 *.local
+
+# WhatsApp Web JS
+# .webjs_auth/
+# .webjs_cache/
+
+# Zip files
+*.zip
 
 # Editor directories and files
 .vscode/*
