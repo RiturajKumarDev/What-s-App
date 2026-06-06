@@ -3,11 +3,9 @@ const express = require('express');
 const cors = require("cors");
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
-const { execSync } = require('child_process');
-const fs = require('fs');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -16,65 +14,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 let isClientReady = false;
 
-// Find Chrome executable path - more thorough search
-function findChrome() {
-    // Common Chrome installation paths on Linux
-    const pathsToCheck = [
-        '/usr/bin/google-chrome-stable',
-        '/usr/bin/google-chrome',
-        '/usr/bin/chromium-browser',
-        '/usr/bin/chromium',
-        '/opt/google/chrome/chrome',
-        '/usr/local/bin/google-chrome',
-        process.env.PUPPETEER_EXECUTABLE_PATH
-    ].filter(Boolean);
-
-    // Check each path
-    for (const chromePath of pathsToCheck) {
-        if (fs.existsSync(chromePath)) {
-            console.log(`✅ Found Chrome at: ${chromePath}`);
-            return chromePath;
-        }
-    }
-
-    // Try using 'which' command
-    try {
-        const whichPath = execSync('which google-chrome-stable || which google-chrome || which chromium-browser || which chromium', {
-            encoding: 'utf8',
-            stdio: ['pipe', 'pipe', 'ignore']
-        }).trim();
-
-        if (whichPath && fs.existsSync(whichPath)) {
-            console.log(`✅ Found Chrome via which: ${whichPath}`);
-            return whichPath;
-        }
-    } catch (e) {
-        // Silent fail
-    }
-
-    // List what's in /usr/bin/ for debugging
-    try {
-        const files = execSync('ls -la /usr/bin/ | grep -i chrome', { encoding: 'utf8' });
-        console.log('Files in /usr/bin/ containing chrome:', files);
-    } catch (e) { }
-
-    console.error('❌ Chrome not found!');
-    return null;
-}
-
-const chromePath = findChrome();
-
-if (!chromePath) {
-    console.error('⚠️ Chrome not found. Trying to continue with bundled Chromium...');
-    // Don't exit, let puppeteer try its bundled version
-}
-
-// Configure client with fallback options
-const clientOptions = {
+// Configure client for Docker environment
+const client = new Client({
     authStrategy: new LocalAuth({
         clientId: 'main-session'
     }),
     puppeteer: {
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
         headless: true,
         args: [
             '--no-sandbox',
@@ -86,14 +32,9 @@ const clientOptions = {
             '--disable-gpu'
         ]
     }
-};
+});
 
-// Add executable path if found
-if (chromePath) {
-    clientOptions.puppeteer.executablePath = chromePath;
-}
-
-const client = new Client(clientOptions);
+console.log(`Using Chrome at: ${process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable'}`);
 
 client.on('qr', (qr) => {
     console.log('\n📱 SCAN THIS QR CODE IN WHATSAPP:\n');
@@ -137,8 +78,7 @@ app.get('/', (req, res) => {
 app.get('/status', (req, res) => {
     res.json({
         success: true,
-        whatsappReady: isClientReady,
-        chromePath: chromePath || 'not found'
+        whatsappReady: isClientReady
     });
 });
 
@@ -149,10 +89,10 @@ app.post('/send-otp', async (req, res) => {
 
         const message = `🔐 Your OTP for verification is *${otp}*.\nThis OTP is valid for 10 minutes. Please do not share it with anyone.\nIf you did not request this code, please ignore this message.`;
 
-        if (!number || !message) {
+        if (!number) {
             return res.status(400).json({
                 success: false,
-                error: 'number and message are required'
+                error: 'number is required'
             });
         }
 
@@ -251,8 +191,7 @@ app.post('/send-message', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📊 Chrome path: ${chromePath || 'using default'}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
 
 client.initialize();
