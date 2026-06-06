@@ -19,6 +19,7 @@ const client = new Client({
     authStrategy: new LocalAuth({
         clientId: 'main-session'
     }),
+    qrMaxRetries: 10, 
     puppeteer: {
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
         headless: true,
@@ -29,7 +30,10 @@ const client = new Client({
             '--disable-accelerated-2d-canvas',
             '--no-first-run',
             '--no-zygote',
-            '--disable-gpu'
+            '--disable-gpu',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding'
         ]
     }
 });
