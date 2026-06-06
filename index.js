@@ -17,8 +17,10 @@ let isClientReady = false;
 // Configure client for Docker environment
 const client = new Client({
     authStrategy: new LocalAuth({
-        clientId: 'main-session'
+        clientId: 'fresh-session-1'
     }),
+    qrMaxRetries: 5,
+    webVersion: '2.2412.54',
     puppeteer: {
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
         headless: true,
@@ -48,13 +50,13 @@ client.on('loading_screen', (percent, message) => {
     console.log(`Loading... ${percent}% - ${message}`);
 });
 
+client.on('authenticated', () => {
+    console.log('✅ Authenticated successfully');
+});
+
 client.on('ready', () => {
     isClientReady = true;
     console.log('✅ WhatsApp client is ready!');
-});
-
-client.on('authenticated', () => {
-    console.log('✅ Authenticated successfully');
 });
 
 client.on('auth_failure', (msg) => {
