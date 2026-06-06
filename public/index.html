@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WhatsApp Sender</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .box {
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        input,
+        textarea,
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        button {
+            background: #25d366;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #1ebe5d;
+        }
+
+        #result {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <h2>WhatsApp Message Sender</h2>
+        <input type="text" id="number" placeholder="Enter number with country code, e.g. 919507091174" />
+        <textarea id="message" placeholder="Enter your message"></textarea>
+        <button onclick="sendMessage()">Send Message</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const number = document.getElementById('number').value.trim();
+            const message = document.getElementById('message').value.trim();
+            const result = document.getElementById('result');
+
+            result.innerText = 'Sending...';
+
+            try {
+                const response = await fetch('http://localhost:3000/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ number, message })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    result.style.color = 'green';
+                    result.innerText = data.message;
+                } else {
+                    result.style.color = 'red';
+                    result.innerText = data.error;
+                }
+            } catch (err) {
+                result.style.color = 'red';
+                result.innerText = 'Request failed';
+            }
+        }
+    </script>
+</body>
+
+</html>
